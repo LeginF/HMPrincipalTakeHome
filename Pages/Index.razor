@@ -1,0 +1,62 @@
+﻿@page "/"
+@inject HttpClient HttpClient
+
+<h1>Github Search</h1>
+
+Enter your search
+
+<table>
+    <tr>
+        <th>Tag</th>
+        <th><input @bind=Tag /></th>
+    </tr>
+    <button class="btn btn-primary" @onclick="Search"></button>"
+</table>>
+
+
+@code 
+{
+    private string Tag {get; set; }
+
+    public class Repository
+    {
+        public string id {get;set;}
+        public string node_id {get;set;}
+        public string name {get;set;}
+        public string full_name{get;set;}
+        //public Owner owner {get;set;}
+    }
+
+    private class item
+    {
+        public string name {get;set;}
+        public string path {get;set;}
+        public string sha {get;set;}
+        public string url {get;set;}
+        public string git_url {get;set;}
+        public string html_url {get;set;}
+        public Repository repository {get;set;}
+    }
+
+    private class Response
+    {
+        public int total_count {get;set;}
+        public bool incomplete_results {get;set;}
+        public List<item> items{get;set;}
+    }
+
+    private List<Response> _responses = new List<Response>();
+
+    private void Search()
+    {
+        GetResponses();
+    }
+
+   private async Task GetResponses() 
+   {
+        String url;
+        url = "https://api.github.com/search/code";
+        url += "?q=tag:foo"
+        _responses = await HttpClient.GetJsonAsync<List<Response>>(url);
+   }
+}
