@@ -9,13 +9,13 @@ Enter your search
 
 <table>
     <tr>
-        <th>Tag</th>
-        <th><input @bind=Tag /></th>
+        <th>Topic</th>
+        <th><input @bind=Topic /></th>
     </tr>
     <button class="btn btn-primary" @onclick="Search">Search</button>
 </table>
 
-@if ((_responses == null) || (!_responses.Any()))
+@if ((_responses == null))
 {
     <p><em>Loading...</em></p>
 }
@@ -29,9 +29,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach(var response in _responses)
-            {
-                foreach (var item in response.items)
+            @foreach (var item in _responses.items)
                 {
                     <tr>
                         <td>@item.name</td>
@@ -47,7 +45,7 @@ else
 {
     
 
-    private string Tag {get; set; }
+    private string Topic {get; set; }
 
     public class Repository
     {
@@ -76,7 +74,7 @@ else
         public List<item> items{get;set;}
     }
 
-    private List<Response> _responses = new List<Response>();
+    private Response _responses = null; //new Response();
 
     
 }
@@ -85,17 +83,35 @@ else
 {
     private void Search()
     {
+        Console.WriteLine("Search");
         GetResponses();
     }
 
    private async Task GetResponses() 
    {
         String url;
-        url = "https://api.github.com/search/code";
-        url += "?q=tag:foo";
+        url = "https://api.github.com/search/repositories";
+        url += "?q=topic:" + Topic;
         //_responses = await HttpClient.GetJsonAsync<List<Response>>(url);
         //var response = await Http.GetStringAsync(url);
-        _responses = await Http.GetJsonAsync<List<Response>>(url);
+        Console.WriteLine("query:" + url);
+        try
+        {
+        _responses = await Http.GetJsonAsync<Response>(url);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            var next = ex.InnerException;
+            var i = 0;
+            while (next != null)
+            {
+                Console.WriteLine(next.Message);
+                next = next.InnerException;
+                if (i++ > 9) break;
+            }
+        }
+        Console.WriteLine("number of responses:{0}",_responses.items.Count());
         StateHasChanged();
    }
 }
