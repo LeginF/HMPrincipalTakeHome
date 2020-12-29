@@ -1,5 +1,7 @@
 ﻿@page "/"
-@inject HttpClient HttpClient
+@inject HttpClient Http
+
+
 
 <h1>Github Search</h1>
 
@@ -10,12 +12,41 @@ Enter your search
         <th>Tag</th>
         <th><input @bind=Tag /></th>
     </tr>
-    <button class="btn btn-primary" @onclick="Search"></button>"
-</table>>
+    <button class="btn btn-primary" @onclick="Search">Search</button>
+</table>
+
+@if ((_responses == null) || (!_responses.Any()))
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class='table'>
+        <thead>
+            <tr>
+                <th>Name</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var response in _responses)
+            {
+                foreach (var item in response.items)
+                {
+                    <tr>
+                        <td>@item.name</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
 
 
 @code 
 {
+    
+
     private string Tag {get; set; }
 
     public class Repository
@@ -47,6 +78,11 @@ Enter your search
 
     private List<Response> _responses = new List<Response>();
 
+    
+}
+
+@functions 
+{
     private void Search()
     {
         GetResponses();
@@ -56,7 +92,10 @@ Enter your search
    {
         String url;
         url = "https://api.github.com/search/code";
-        url += "?q=tag:foo"
-        _responses = await HttpClient.GetJsonAsync<List<Response>>(url);
+        url += "?q=tag:foo";
+        //_responses = await HttpClient.GetJsonAsync<List<Response>>(url);
+        //var response = await Http.GetStringAsync(url);
+        _responses = await Http.GetJsonAsync<List<Response>>(url);
+        StateHasChanged();
    }
 }
