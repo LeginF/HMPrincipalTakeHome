@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject HttpClient Http
 
 
@@ -33,6 +34,8 @@ else
                 {
                     <tr>
                         <td>@item.name</td>
+                        <td>@item.description</td>
+                        <td>@Collaborators(item.collaborators_url)</td>
                     </tr>
                 }
             }
@@ -53,6 +56,7 @@ else
         public string node_id {get;set;}
         public string name {get;set;}
         public string full_name{get;set;}
+        
         //public Owner owner {get;set;}
     }
 
@@ -64,6 +68,8 @@ else
         public string url {get;set;}
         public string git_url {get;set;}
         public string html_url {get;set;}
+        public string description{get;set;}
+        public string collaborators_url{get; set;}
         public Repository repository {get;set;}
     }
 
@@ -94,7 +100,6 @@ else
         url += "?q=topic:" + Topic;
         //_responses = await HttpClient.GetJsonAsync<List<Response>>(url);
         //var response = await Http.GetStringAsync(url);
-        Console.WriteLine("query:" + url);
         try
         {
         _responses = await Http.GetJsonAsync<Response>(url);
@@ -102,16 +107,21 @@ else
         catch(Exception ex)
         {
             Console.WriteLine(ex.Message);
-            var next = ex.InnerException;
-            var i = 0;
-            while (next != null)
-            {
-                Console.WriteLine(next.Message);
-                next = next.InnerException;
-                if (i++ > 9) break;
-            }
         }
-        Console.WriteLine("number of responses:{0}",_responses.items.Count());
         StateHasChanged();
+   }
+
+   private async Task Collaborators(String collaborators_url)
+   {
+       try{
+           //Http http = new Http();
+           //Http.Headers.Add("","");
+           Http.DefaultRequestHeaders.Accept.Clear();
+           Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token","1234");
+           var collabs = Http.GetStringAsync(collaborators_url);
+           Console.WriteLine(collabs);
+       } catch(Exception ex) {
+           Console.WriteLine(ex.Message);
+       }
    }
 }
