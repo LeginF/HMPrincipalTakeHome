@@ -1,5 +1,4 @@
 ﻿@page "/"
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject HttpClient Http
 
 
@@ -10,11 +9,18 @@ Enter your search
 
 <table>
     <tr>
-        <th>Topic</th>
-        <th><input @bind=Topic /></th>
+        <th>GitHub Authorizaton Token</th>
+        <th><input @bind="AuthorizationToken" /></th>
     </tr>
-    <button class="btn btn-primary" @onclick="Search">Search</button>
+    <tr>
+        <th>Topic</th>
+        <th><input @bind="Topic" /></th>
+    </tr>
 </table>
+<button class="btn btn-primary" @onclick="Search">Search</button>
+
+
+@Collaborators
 
 @if ((_responses == null))
 {
@@ -31,11 +37,12 @@ else
         </thead>
         <tbody>
             @foreach (var item in _responses.items)
-                {
+            {
+                GetCollaborators(item.collaborators_url);
                     <tr>
                         <td>@item.name</td>
                         <td>@item.description</td>
-                        <td>@Collaborators(item.collaborators_url)</td>
+                        <td>@Collaborators</td>
                     </tr>
                 }
             }
@@ -46,9 +53,11 @@ else
 
 @code 
 {
-    
+
 
     private string Topic {get; set; }
+    private string AuthorizationToken { get; set; }
+    private string Collaborators { get; set; }
 
     public class Repository
     {
@@ -56,7 +65,7 @@ else
         public string node_id {get;set;}
         public string name {get;set;}
         public string full_name{get;set;}
-        
+
         //public Owner owner {get;set;}
     }
 
@@ -82,46 +91,39 @@ else
 
     private Response _responses = null; //new Response();
 
-    
+
 }
 
 @functions 
 {
-    private void Search()
-    {
-        Console.WriteLine("Search");
-        GetResponses();
-    }
+   
 
-   private async Task GetResponses() 
-   {
-        String url;
-        url = "https://api.github.com/search/repositories";
-        url += "?q=topic:" + Topic;
-        //_responses = await HttpClient.GetJsonAsync<List<Response>>(url);
-        //var response = await Http.GetStringAsync(url);
+    private async Task Search()
+    {
         try
         {
-        _responses = await Http.GetJsonAsync<Response>(url);
+            var url = "https://api.github.com/search/repositories?q=topic:" + Topic;
+            _responses = await Http.GetJsonAsync<Response>(url);
         }
         catch(Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
         StateHasChanged();
-   }
+    }
 
-   private async Task Collaborators(String collaborators_url)
-   {
-       try{
-           //Http http = new Http();
-           //Http.Headers.Add("","");
-           Http.DefaultRequestHeaders.Accept.Clear();
-           Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token","1234");
-           var collabs = Http.GetStringAsync(collaborators_url);
-           Console.WriteLine(collabs);
-       } catch(Exception ex) {
-           Console.WriteLine(ex.Message);
-       }
-   }
+    private async Task GetCollaborators(String collaborators_url)
+    {
+        try{
+            using(var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", AuthorizationToken);
+                Collaborators =  await client.GetStringAsync(collaborators_url);
+                StateHasChanged();
+            
+            }
+        } catch(Exception ex) {
+            Console.WriteLine(ex.Message);
+        }
+    }
 }
