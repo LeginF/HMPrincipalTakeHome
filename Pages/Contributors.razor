@@ -1,0 +1,54 @@
+﻿@page "/Contributors/{authToken}/{contributors_url}"
+
+@code
+{
+    [Parameter]
+    public string Contributors_Url {get; set; }
+    [Parameter]
+    public string AuthToken { get; set; }
+
+    public List<Contributor> _Contributors = null;
+
+    public class Contributor
+    {
+        public string login { get; set; }
+        public string avatar_url { get; set; }
+        public string url { get; set; }
+        public string repos_utl { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        GetContributors();
+    }
+
+    async Task GetContributors()
+    {
+        try
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", AuthToken);
+                _Contributors = await client.GetJsonAsync<List<Contributor>>(Contributors_Url);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            //item.collaborators = ex.Message;
+        }
+    }
+}
+
+
+@if(_Contributors != null)
+{
+    foreach(var contributor in _Contributors)
+    {
+        <img height="10" width="10" src="@contributor.avatar_url"/>
+        <a href="@contributor.url">@contributor.login</a>
+        <span>&nbsp;</span>
+    }
+}
+
