@@ -40,9 +40,14 @@ else
             {
                 <tr>
                     <td>@item.name</td>
-                    <td>@item.description</td>
-                    <Contributors contributors_url="@item.contributors_url" authToken="@AuthorizationToken"/>
-                    
+                    <td>
+                        <b>Description:</b>&nbsp;@item.description<br />
+                        <b>Tags:</b>&nbsp;<Tags Tags_Url="@item.tags_url" AuthToken="@AuthorizationToken" />
+                    </td>
+                    <td>
+                        <b>Contributors:</b>&nbsp;
+                        <Contributors contributors_url="@item.contributors_url" authToken="@AuthorizationToken"/>
+                    </td>
                 </tr>
             }
             StateHasChanged();
@@ -82,6 +87,8 @@ else
         public string collaborators { get; set; }
         public string contributors_url { get; set; }
         public string contributors { get; set; }
+        public string tags_url { get; set; }
+        public string topics { get; set; }
     }
 
     private class Response

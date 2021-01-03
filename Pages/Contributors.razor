@@ -15,6 +15,7 @@
         public string avatar_url { get; set; }
         public string url { get; set; }
         public string repos_utl { get; set; }
+        public string html_url { get; set; }
     }
 
     protected override void OnInitialized()
@@ -36,7 +37,6 @@
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
-            //item.collaborators = ex.Message;
         }
     }
 }
@@ -47,7 +47,7 @@
     foreach(var contributor in _Contributors)
     {
         <img height="10" width="10" src="@contributor.avatar_url"/>
-        <a href="@contributor.url">@contributor.login</a>
+        <a href="@contributor.html_url" target="_blank">@contributor.login</a>
         <span>&nbsp;</span>
     }
 }
