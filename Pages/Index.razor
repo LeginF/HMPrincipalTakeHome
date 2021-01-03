@@ -21,11 +21,7 @@ Enter your search
 
 
 
-@if ((_responses == null))
-{
-    <p><em>Loading...</em></p>
-}
-else
+@if (_responses != null)
 {
     <table class='table'>
         <thead>
@@ -50,7 +46,7 @@ else
                     </td>
                 </tr>
             }
-            StateHasChanged();
+
         </tbody>
     </table>
 }
@@ -70,7 +66,6 @@ else
         public string name {get;set;}
         public string full_name{get;set;}
 
-        //public Owner owner {get;set;}
     }
 
     private class Item
@@ -131,12 +126,10 @@ else
                 {
                     client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", AuthorizationToken);
                     item.contributors = await client.GetStringAsync(item.contributors_url);
-                    //Console.WriteLine(item.contributors);
                 }
             }
         } catch(Exception ex) {
             Console.WriteLine(ex.Message);
-            //item.collaborators = ex.Message;
         }
     }
 }
