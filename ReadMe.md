@@ -6,7 +6,7 @@ Once the user clicks the Search button, the application queries GitHub for proje
 
 ## Requirements
 
-- [.Net 5.0][https://dotnet.microsoft.com/download/dotnet/5.0]
+- [.Net 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
 
 ## Running
 
