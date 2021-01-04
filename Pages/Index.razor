@@ -8,23 +8,32 @@
     <tr>
         <th>GitHub Authorizaton Token</th>
         <th><input @bind="AuthorizationToken" width="200"/></th>
+        <th>@AuthorizationError</th>
     </tr>
     <tr>
         <th>Topic</th>
         <th><input @bind="Topic" /></th>
+        <th>@TopicError</th>
     </tr>
 </table>
+&nbsp;<br />
 <button class="btn btn-primary" @onclick="Search">Search</button>
-
+&nbsp;<br />
 
 
 @if (_responses != null)
 {
+    @if (_responses.total_count < 1)
+    {
+        <span>No search results</span>
+    }
+    else
+    {
     <table class='table'>
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Description</th>
+                <th>Description &amp; Tags</th>
                 <th>Contributors</th>
             </tr>
         </thead>
@@ -46,7 +55,8 @@
 
         </tbody>
     </table>
-}
+    }
+    }
 
 
 @code 
@@ -55,6 +65,8 @@
 
     private string Topic {get; set; }
     private string AuthorizationToken { get; set; }
+    private string TopicError { get; set; }
+    private string AuthorizationError { get; set; }
 
     public class Repository
     {
@@ -103,15 +115,45 @@
     {
         try
         {
-            var url = "https://api.github.com/search/repositories?q=topic:" + Topic;
-            _responses = await Http.GetJsonAsync<Response>(url);
-            //await GetCollaborators();
+            if (NoErrors())
+            {
+                try
+                {
+                    var url = "https://api.github.com/search/repositories?q=topic:" + Topic;
+                    _responses = await Http.GetJsonAsync<Response>(url);
+                }
+                catch (Exception ex)
+                {
+                    AuthorizationError = ex.Message;
+                }
+            }
+
         }
         catch(Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
         StateHasChanged();
+    }
+
+    private bool NoErrors()
+    {
+        var retVal = true;
+        AuthorizationError = TopicError = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(AuthorizationToken))
+        {
+            AuthorizationError = "Please provide an authorization token.";
+            retVal = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(Topic))
+        {
+            TopicError = "Please provide a topic to search for";
+            retVal = false;
+        }
+
+        return retVal;
     }
 
     async Task GetCollaborators()
@@ -126,7 +168,7 @@
                 }
             }
         } catch(Exception ex) {
-            Console.WriteLine(ex.Message);
+            AuthorizationError = ex.Message;
         }
     }
 }
