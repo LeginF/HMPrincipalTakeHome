@@ -141,6 +141,7 @@
                 catch (Exception ex)
                 {
                     AuthorizationError = ex.Message;
+                    StateHasChanged();
                 }
             }
 
