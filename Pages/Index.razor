@@ -130,9 +130,12 @@
                 {
                     using(var client = new HttpClient())
                     {
+                        _responses = null;
+                        StateHasChanged();
                         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
                         var url = "https://api.github.com/search/repositories?q=topic:" + Topic;
                         _responses = await client.GetJsonAsync<Response>(url);
+                        StateHasChanged();
                     }
                 }
                 catch (Exception ex)
