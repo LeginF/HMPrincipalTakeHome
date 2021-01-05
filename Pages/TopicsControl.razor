@@ -1,17 +1,24 @@
-@page "/TopicsControl/{authToken}/{tags_url}"
+@page "/TopicsControl/{authToken}/{owner}/{repo}"
 
 @code
 {
     [Parameter]
-    public string Tags_Url { get; set; }
+    public string Owner { get; set; }
+    [Parameter]
+    public string Repo { get; set; }
     [Parameter]
     public string AuthToken { get; set; }
 
-    public List<Tag> _Tags { get; set; }
+    public Topics _Topics { get; set; }
 
     public class Tag
     {
         public string name { get; set; }
+    }
+
+    public class Topics
+    {
+        public List<String> names { get; set; }
     }
 
     protected override void OnInitialized()
@@ -27,7 +34,8 @@
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", AuthToken);
-                _Tags = await client.GetJsonAsync<List<Tag>>(Tags_Url);
+                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.mercy-preview+json"));
+                _Topics = await client.GetJsonAsync<Topics>("https://api.github.com/repos/"+Owner+"/"+Repo+"/topics");
                 StateHasChanged();
             }
         }
@@ -38,10 +46,10 @@
     }
 }
 
-@if(_Tags != null)
+@if(_Topics != null)
 {
-    foreach (var tag in _Tags)
+    foreach (var name in _Topics.names)
     {
-        @tag.name <span>&nbsp;</span>
+        @name <span>&nbsp;</span>
     }
 }

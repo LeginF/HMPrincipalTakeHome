@@ -33,7 +33,7 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Description &amp; Tags</th>
+                <th>Description &amp; Topics</th>
                 <th>Contributors</th>
             </tr>
         </thead>
@@ -44,7 +44,10 @@
                     <td>@item.name</td>
                     <td>
                         <b>Description:</b>&nbsp;@item.description<br />
-                        <b>Tags:</b>&nbsp;<Tags Tags_Url="@item.tags_url" AuthToken="@AuthorizationToken" />
+                        @if (item.owner != null)
+                        {
+                            <b>Topics:</b><span>&nbsp;</span><TopicsControl Owner="@item.owner.login" Repo="@item.name" AuthToken="@AuthorizationToken" />
+                        }
                     </td>
                     <td>
                         <b>Contributors:</b>&nbsp;
@@ -61,8 +64,6 @@
 
 @code 
 {
-
-
     private string Topic {get; set; }
     private string AuthorizationToken { get; set; }
     private string TopicError { get; set; }
@@ -74,8 +75,14 @@
         public string node_id {get;set;}
         public string name {get;set;}
         public string full_name{get;set;}
-
+        public Owner owner { get; set; }
     }
+
+    public class Owner
+    {
+        public string login { get; set; }
+    }
+
 
     private class Item
     {
@@ -87,13 +94,15 @@
         public string html_url {get;set;}
         public string description{get;set;}
         public string collaborators_url{get; set;}
-        public Repository repository {get;set;}
+        public Repository repository { get;set;}
         public string collaborators { get; set; }
         public string contributors_url { get; set; }
         public string contributors { get; set; }
         public string tags_url { get; set; }
         public string topics { get; set; }
+        public Owner owner { get; set; }
     }
+
 
     private class Response
     {
@@ -119,8 +128,12 @@
             {
                 try
                 {
-                    var url = "https://api.github.com/search/repositories?q=topic:" + Topic;
-                    _responses = await Http.GetJsonAsync<Response>(url);
+                    using(var client = new HttpClient())
+                    {
+                        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
+                        var url = "https://api.github.com/search/repositories?q=topic:" + Topic;
+                        _responses = await client.GetJsonAsync<Response>(url);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -156,19 +169,5 @@
         return retVal;
     }
 
-    async Task GetCollaborators()
-    {
-        try{
-            using(var client = new HttpClient())
-            {
-                foreach (var item in _responses.items)
-                {
-                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", AuthorizationToken);
-                    item.contributors = await client.GetStringAsync(item.contributors_url);
-                }
-            }
-        } catch(Exception ex) {
-            AuthorizationError = ex.Message;
-        }
-    }
+    
 }
