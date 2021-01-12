@@ -16,6 +16,7 @@
         <th>@TopicError</th>
     </tr>
 </table>
+<span id="searching" hidden="@HideSearching">Searching...</span>
 &nbsp;<br />
 <button class="btn btn-primary" @onclick="Search">Search</button>
 &nbsp;<br />
@@ -29,6 +30,8 @@
     }
     else
     {
+    <button @onclick="Back" hidden="@HideBack">&larr;</button> @Page<span> of </span>@Pages
+    <button @onclick="Forward" hidden="@HideForward">&rarr;</button>
     <table class='table'>
         <thead>
             <tr>
@@ -40,25 +43,33 @@
         <tbody>
             @foreach (var item in _responses.items)
             {
-                <tr>
-                    <td>@item.name</td>
-                    <td>
-                        <b>Description:</b>&nbsp;@item.description<br />
-                        @if (item.owner != null)
-                        {
-                            <b>Topics:</b><span>&nbsp;</span><TopicsControl Owner="@item.owner.login" Repo="@item.name" AuthToken="@AuthorizationToken" />
-                        }
-                    </td>
-                    <td>
-                        <b>Contributors:</b>&nbsp;
-                        <Contributors contributors_url="@item.contributors_url" authToken="@AuthorizationToken"/>
-                    </td>
-                </tr>
-            }
+                @if ((item.index > (Page - 1) * PAGE_SIZE) && (item.index < Page * PAGE_SIZE))
+                    // only show items that belong on the current page
+                {
+                    <tr>
+                        <td>
+                            <a href="@item.html_url" target="_blank">@item.name</a>
+                        </td>
+                        <td>
+                            <b>Description:</b>&nbsp;@item.description<br />
+                            
+                        </td>
+                        <td>
+                            <b>Contributors:</b>&nbsp;
+                            <Contributors contributors_url="@item.contributors_url" authToken="@AuthorizationToken" />
+                            @if (item.owner != null)
+                            {
+                                 <hr /><br />
+                                 <b>Topics:</b><span>&nbsp;</span><TopicsControl Owner="@item.owner.login" Repo="@item.name" AuthToken="@AuthorizationToken" />
+                            }
+                        </td>
+                    </tr>
+                 }
+             }
 
-        </tbody>
-    </table>
-    }
+            </tbody>
+        </table>
+        }
     }
 
 
@@ -68,6 +79,12 @@
     private string AuthorizationToken { get; set; }
     private string TopicError { get; set; }
     private string AuthorizationError { get; set; }
+    private int Page = 1;
+    private const int PAGE_SIZE = 10;
+    private int Pages;
+    private bool HideBack = false;
+    private bool HideForward = false;
+    private bool HideSearching = true;
 
     public class Repository
     {
@@ -86,6 +103,7 @@
 
     private class Item
     {
+        public int index { get; set; }
         public string name {get;set;}
         public string path {get;set;}
         public string sha {get;set;}
@@ -118,7 +136,31 @@
 
 @functions 
 {
+    void Back()
+    {
+        if (Page > 1)
+        {
+            Page--;
+            DoShowButtons();
+            StateHasChanged();
+        }
+    }
 
+    void Forward()
+    {
+        if (Page < Pages)
+        {
+            Page++;
+            DoShowButtons();
+            StateHasChanged();
+        }
+    }
+
+    void DoShowButtons()
+    {
+        HideBack = (Page <= 1);
+        HideForward = (Page >= Pages);
+    }
 
     async Task Search()
     {
@@ -130,11 +172,16 @@
                 {
                     using(var client = new HttpClient())
                     {
+                        HideSearching = false;
                         _responses = null;
                         StateHasChanged();
                         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
                         var url = "https://api.github.com/search/repositories?q=topic:" + Topic;
                         _responses = await client.GetJsonAsync<Response>(url);
+                        SetIndex(_responses);
+                        Page = 1;
+                        DoShowButtons();
+                        HideSearching = true;
                         StateHasChanged();
                     }
                 }
@@ -151,6 +198,17 @@
             Console.WriteLine(ex.Message);
         }
         StateHasChanged();
+    }
+
+    private void SetIndex(Response responses)
+    {
+        int i = 1;
+        foreach(var item in responses.items)
+        {
+            item.index = i++;
+        }
+        Pages = --i / PAGE_SIZE;
+        if (i % PAGE_SIZE > 0) Pages++;
     }
 
     private bool NoErrors()
@@ -173,5 +231,5 @@
         return retVal;
     }
 
-    
+
 }
