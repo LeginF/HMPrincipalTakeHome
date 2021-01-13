@@ -29,7 +29,6 @@
         {
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Token", AuthToken);
                 _Contributors = await client.GetJsonAsync<List<Contributor>>(Contributors_Url);
                 StateHasChanged();
             }
